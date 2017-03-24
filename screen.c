@@ -32,7 +32,7 @@ void displayBar(int col, double rms)
 	int i;
 	for(i=0;i<rms/100;i++)
 	{
-		gotoXY(i+2, col);
+		gotoXY(40-i, col);
 #ifdef UNICODE
 		printf("%s", BAR);
 #else

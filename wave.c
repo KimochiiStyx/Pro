@@ -2,7 +2,7 @@
 #include"screen.h"
 #include"wave.h"
 #include<math.h>
-
+#include"comm.h"
 
 // function definition
 void printID(char s[])
@@ -13,8 +13,8 @@ void printID(char s[])
 	printf("\n");
 }
 // printID() and fillID() are so-called local functions because
-// they are merely used by the functions in this file/module.
-void fillID(char *d, const char s[])
+// they are merely used by the functions in this file/module
+void fillID(char *d,const char s[])
 {
 	int i;
 	for(i=0;i<4;i++)
@@ -58,15 +58,15 @@ void testTone(int f, double d)
 	fillID(h.Format, "WAVE");
 	fillID(h.Subchunk1ID, "fmt ");
 	fillID(h.Subchunk2ID, "data");
-	// Chunk size will be calculated later.
+	// Chunk size will be calculated later
 	h.Subchunk1Size=16;
 	h.AudioFormat=1;
  	h.NumChannels=1;
 	h.SampleRate=SAMPLE_RATE; h.BitsPerSample=16;
 	h.ByteRate=SAMPLE_RATE*h.NumChannels*(h.BitsPerSample/8);
-	h.BlockAlign=h.NumChannels*(h.BitsPerSample/8); h.Subchunk2Size=h.ByteRate*d; 
-	h.ChunkSize=h.Subchunk2Size+36; fp=fopen("testtone.wav", "w"); fwrite(&h, sizeof(h), 1, fp); 
-	// write the header to file.
+	h.BlockAlign=h.NumChannels*(h.BitsPerSample/8); h.Subchunk2Size=h.ByteRate*d;
+	h.ChunkSize=h.Subchunk2Size+36; fp=fopen("testtone.wav", "w"); fwrite(&h, sizeof(h), 1, fp);
+	// write the header to file
 	for(i=0;i<SAMPLE_RATE*d;i++) {
 		sample=32767*sin(2*PI*f*i/SAMPLE_RATE); fwrite(&sample, sizeof(sample), 1, fp);
 	}
@@ -74,13 +74,26 @@ void testTone(int f, double d)
 	printf("Test tone created!\n");
 }
 
+// display wave data function displays 80 pieces of RMS value
+// on terminal screen, but this amount of data is still too much
+// to send. According to the SLM standard, we need to send
+// short Leq values, which is 8 pieces per second
 void dispWAVdata(short int s[]) {
 	int i, j; double sum200, rms200;
-	for(i=0;i<80;i++){
-		sum200=0.0; 
+	// the following variables are used to calculate short Leq
+	double Leq[8], sum8=0.0;
+	for(i=0;i<80;i++)  //outer loop for 80 times
+	{
+		sum200=0.0;  //initiate accumuater for 200 samples
 		for(j=0;j<SAMPLE_RATE/80;j++)
 		{
 			sum200+=(*s)*(*s); s++;
+		}
+		sum8+=sum200; // accumulate current sum200 to sum8
+		if(i%10==9)
+		{
+			Leq[i/10] = sqrt(sum8/SAMPLE_RATE/8);  //calculate RMS of 2000 samples
+			sum8=0.0;  // reset sum8 for next Leq value
 		}
 		rms200=sqrt(sum200/200);
 #ifdef DEBUG //conditional compiling
@@ -89,5 +102,8 @@ void dispWAVdata(short int s[]) {
 		//display vertical bars
 		displayBar(i+1, rms200);
 #endif
-	}
+	}  //end of for(i)
+#ifdef COMM
+	send_data(Leq);
+#endif
 }
