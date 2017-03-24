@@ -1,3 +1,5 @@
+#this is a comment line
+
 OBJ = main.o wave.o screen.o comm.o
 APPNAME = wave.a
 
