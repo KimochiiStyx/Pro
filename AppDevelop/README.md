@@ -1,5 +1,5 @@
 #README
-#Written by The Anh
+#Written by Sun Haoyuan
 #This project is written for Linux OS
 #https://github.com/KimochiiStyx/Pro
 ------------------------------------------------
